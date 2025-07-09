@@ -3,7 +3,7 @@ SWAT팀에서 제작하는 백석고 길찾기 (Baekseok-PathFinder) 앱입니�
 
 12월 한들제에 맞추어 한들제 전까지 완성함을 목표로 합니다.
 
-참고 : [전속탐구](https://github.com/s-dumbman/FE_HeuristicAlgor)
+참고 : [전속탐구](https://github.com/s-dumbman/FE_HeuristicAlgor), [전속탐구 보고서](https://github.com/s-dumbman/FE_HeuristicAlgor/blob/main/10812%EB%B0%95%EC%84%B1%EC%B0%AC%20%EA%B0%9C%EC%9D%B8%EC%8B%AC%ED%99%94%ED%83%90%EA%B5%AC%20%EC%88%98%EC%A0%95%EB%B3%B8.pdf)
 
 # Credit
 |이름|역할|설명|
