@@ -1,6 +1,8 @@
 # SWAT_BSPF-application-
 SWAT팀에서 제작하는 백석고 길찾기 (Baekseok-PathFinder) 앱입니다.
+
 12월 한들제에 맞추어 한들제 전까지 완성함을 목표로 합니다.
+
 참고 : [전속탐구](https://github.com/s-dumbman/FE_HeuristicAlgor)
 
 # Credit
