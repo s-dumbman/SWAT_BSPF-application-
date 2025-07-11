@@ -1,5 +1,7 @@
 import heapq
 
+# f(평가함수) = g(지나온 거리) + h(가야할 거리)
+
 class grid:
     def __init__(self):
         self.grid = [
@@ -64,40 +66,41 @@ class Node:
     def __lt__(self, other):
         return self.f < other.f
 
-def search(grid, s, g):
-    OL = []
-    CL = set()
+def search(grid, s, g): # A* 알고리즘
+    OL = [] # Open List
+    CL = set() # Close List
 
-    s_node = Node(s[0], s[1], s[2])
-    g_node = Node(g[0], g[1], g[2])
+    s_node = Node(s[0], s[1], s[2]) # 시작 노드 설정
+    g_node = Node(g[0], g[1], g[2]) # 목표 노드 설정
 
-    heapq.heappush(OL, s_node)
-    while OL:
-        c_node = heapq.heappop(OL)
+    heapq.heappush(OL, s_node) # 첫 OL을 시작 노드로 설정 -> 알고리즘 시작
+    while OL: # OL의 원소가 존재하는 경우에 (공집합이 아닌 경우에)
+        c_node = heapq.heappop(OL) 
         CL.add((c_node.x, c_node.y, c_node.z))
+        print(f"Add Close List: {c_node.x}, {c_node.y}, {c_node.z} (f={c_node.f}, g={c_node.g}, h={c_node.h})")
 
         if c_node.x == g_node.x and c_node.y == g_node.y and c_node.z == g_node.z:
+            print(f"Completed Node: {c_node.x}, {c_node.y}, {c_node.z} (f={c_node.f}, g={c_node.g}, h={c_node.h})")
             return reconstruct(c_node)
 
-        for dx, dy, dz in direction_list:
-            n_x = c_node.x + dx
-            n_y = c_node.y + dy
-            n_z = c_node.z + dz
-            d_node = Node(n_x, n_y, n_z)   
-            # 예외확인 필요
-            k = distanceGenerate(d_node, c_node)
+        for dx, dy, dz in direction_list: # 3*3*3 이동 가짓수
+            n_x = c_node.x + dx # 이동할 노드의 x좌표
+            n_y = c_node.y + dy # 이동할 노드의 y좌표
+            n_z = c_node.z + dz # 이동할 노드의 z좌표
+            d_node = Node(n_x, n_y, n_z)  # 이동할 노드 설정
+            k = distanceGenerate(d_node, c_node) # 이동할 노드와 도착 노드까지의 거리 계산 (가중치로 활용할 k)
 
-            xlen = len(grid[0][0])
-            ylen = len(grid[0])
-            zlen = len(grid)
+            xlen = len(grid[0][0]) # 공간의 x축 거리 (행)
+            ylen = len(grid[0]) # 공간의 y축 거리 (열)
+            zlen = len(grid) # 공간의 z축 거리 (층)
 
-            if (0 <= n_x < xlen) and (0 <= n_y < ylen) and (0 <= n_z < zlen) and grid[n_z][n_y][n_x] != 1:
-                if (n_x, n_y, n_z) in CL:
+            if (0 <= n_x < xlen) and (0 <= n_y < ylen) and (0 <= n_z < zlen) and grid[n_z][n_y][n_x] != 1: # 이동할 노드가 공간 밖에 없는지 확인 + 막힌 공간이 아닌지 확인
+                if (n_x, n_y, n_z) in CL: # 이동할 노드가 CL에 없는지 확인
                     continue
 
-                n = Node(n_x, n_y, n_z)
-                n.g = c_node.g + k
-                n.h = distanceGenerate(n, g_node)
+                n = Node(n_x, n_y, n_z) # 이동할 노드 설정
+                n.g = c_node.g + k 
+                n.h = distanceGenerate(n, g_node) 
                 n.f = n.g + n.h
                 n.parent = c_node
 
@@ -109,16 +112,18 @@ def search(grid, s, g):
 
                 if not in_open:
                     heapq.heappush(OL, n)
+                    print(f"Add Open List: {n.x}, {n.y}, {n.z} (f={n.f}, g={n.g}, h={n.h})")
 
     return None
 
-def reconstruct(end_node):
-    path = []
-    c = end_node
-    while c is not None:
-        path.append((c.x, c.y, c.z))
-        c = c.parent
-    path.reverse()
+def reconstruct(end_node): # 마지막 경로 작성 함수
+    path = [] 
+    c = end_node # 도착 노드
+    while c is not None: # 불가능한 경우가 아니라면
+        path.append((c.x, c.y, c.z)) # 새로운 자료형 Path(리스트)에 경로 저장
+        c = c.parent # 지나온 길 탐색
+        print(f"Reconstructing: {c.x if c else 'None'}, {c.y if c else 'None'}, {c.z if c else 'None'}")
+    path.reverse() # 마지막 위치 -> 처음 위치 에서 처음 위치 -> 마지막 위치 순으로 경로를 작성
     return path
 
 def mark_path_on_grid(grid, path):
