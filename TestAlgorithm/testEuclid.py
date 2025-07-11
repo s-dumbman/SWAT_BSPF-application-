@@ -1,8 +1,7 @@
-import numpy as np
 import heapq
 import json
 
-def heuristic(node1, node2):
+def distanceGenerate(node1, node2):
     return ((node1.x-node2.x)**2+(node1.y-node2.y)**2+(node1.z-node2.z)**2)**(1/2)
 
 direction_list = []
@@ -46,16 +45,19 @@ def search(grid, s, g):
     while OL:
         c_node = heapq.heappop(OL)
         CL.add((c_node.x, c_node.y, c_node.z))
+        print(f"Add Close List: {c_node.x}, {c_node.y}, {c_node.z} (f={c_node.f}, g={c_node.g}, h={c_node.h})")
 
         if c_node.x == g_node.x and c_node.y == g_node.y and c_node.z == g_node.z:
+            print(f"Completed Node: {c_node.x}, {c_node.y}, {c_node.z} (f={c_node.f}, g={c_node.g}, h={c_node.h})") 
             return reconstruct(c_node)
-
+        
         for dx, dy, dz in direction_list:
             n_x = c_node.x + dx
             n_y = c_node.y + dy
             n_z = c_node.z + dz
-            # 예외확인
-            k = 1
+            # 예외확인 필요
+            d_node = Node(n_x, n_y, n_z)
+            k = distanceGenerate(d_node, c_node)
             xlen = len(grid[0][0])
             ylen = len(grid[0])
             zlen = len(grid)
@@ -66,7 +68,7 @@ def search(grid, s, g):
 
                 n = Node(n_x, n_y, n_z)
                 n.g = c_node.g + k
-                n.h = heuristic(n, g_node)
+                n.h = distanceGenerate(n, g_node)
                 n.f = n.g + n.h
                 n.parent = c_node
 
@@ -78,6 +80,7 @@ def search(grid, s, g):
 
                 if not in_open:
                     heapq.heappush(OL, n)
+                    print(f"Add Open List: {n.x}, {n.y}, {n.z} (f={n.f}, g={n.g}, h={n.h})")
 
     return None
 
@@ -87,6 +90,7 @@ def reconstruct(end_node):
     while c is not None:
         path.append((c.x, c.y, c.z))
         c = c.parent
+        print(f"Reconstructing: {c.x if c else 'None'}, {c.y if c else 'None'}, {c.z if c else 'None'}")
     path.reverse()
     return path
 
