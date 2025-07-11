@@ -1,4 +1,3 @@
-import numpy as np
 import heapq
 
 class grid:
@@ -28,14 +27,13 @@ def unknownGoal(grid):
      p = len(grid[0]) #y
      r = len(grid) #z
      goal = (k-1, p-1, r-1)
-     print(k, p, r)
      return goal
 
 g = grid()
 print(g.start)
 print(g.goal)
 
-def heuristic(node1, node2):
+def distanceGenerate(node1, node2):
     return ((node1.x-node2.x)**2+(node1.y-node2.y)**2+(node1.z-node2.z)**2)**(1/2)
 
 direction_list = []
@@ -65,7 +63,7 @@ class Node:
 
     def __lt__(self, other):
         return self.f < other.f
-    
+
 def search(grid, s, g):
     OL = []
     CL = set()
@@ -85,8 +83,10 @@ def search(grid, s, g):
             n_x = c_node.x + dx
             n_y = c_node.y + dy
             n_z = c_node.z + dz
+            d_node = Node(n_x, n_y, n_z)   
             # 예외확인 필요
-            k = 1
+            k = distanceGenerate(d_node, c_node)
+
             xlen = len(grid[0][0])
             ylen = len(grid[0])
             zlen = len(grid)
@@ -97,7 +97,7 @@ def search(grid, s, g):
 
                 n = Node(n_x, n_y, n_z)
                 n.g = c_node.g + k
-                n.h = heuristic(n, g_node)
+                n.h = distanceGenerate(n, g_node)
                 n.f = n.g + n.h
                 n.parent = c_node
 
