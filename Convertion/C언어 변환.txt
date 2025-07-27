@@ -1,0 +1,194 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+
+#define X 4 // x축 크기
+#define Y 3 // y축 크기
+#define Z 5 // z축 크기
+
+#define OPEN_MAX 1000 // 최대 open 리스트 크기
+
+typedef struct Node {
+    int x, y, z;
+    double g, h, f;
+    struct Node* parent;
+} Node;
+
+int grid[Z][Y][X] = {
+    {
+        {0, 0, 0, 0},
+        {1, 1, 1, 0},
+        {1, 0, 0, 0}
+    },
+    {
+        {1, 1, 1, 1},
+        {1, 1, 1, 1},
+        {0, 1, 1, 1}
+    },
+    {
+        {1, 0, 0, 1},
+        {1, 1, 0, 1},
+        {0, 0, 0, 1}
+    },
+    {
+        {0, 1, 1, 1},
+        {1, 1, 1, 1},
+        {1, 1, 1, 1}
+    },
+    {
+        {0, 0, 1, 0},
+        {1, 0, 0, 0},
+        {0, 1, 0, 0}
+    }
+};
+
+
+int directions[26][3];
+int direction_count = 0;
+
+
+double distance(Node* a, Node* b) {
+    return sqrt(pow(a->x - b->x, 2) + pow(a->y - b->y, 2) + pow(a->z - b->z, 2));
+}
+
+// 방향 초기화 함수
+void init_directions() {
+    for (int dx = -1; dx <= 1; dx++) {
+        for (int dy = -1; dy <= 1; dy++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                if (dx == 0 && dy == 0 && dz == 0) continue;
+                directions[direction_count][0] = dx;
+                directions[direction_count][1] = dy;
+                directions[direction_count][2] = dz;
+                direction_count++;
+            }
+        }
+    }
+}
+
+
+Node* open_list[OPEN_MAX];
+int open_count = 0;
+
+
+Node* pop_min_f() {
+    int min_index = 0;
+    for (int i = 1; i < open_count; i++) {
+        if (open_list[i]->f < open_list[min_index]->f) {
+            min_index = i;
+        }
+    }
+    Node* min_node = open_list[min_index];
+    for (int i = min_index; i < open_count - 1; i++) {
+        open_list[i] = open_list[i + 1];
+    }
+    open_count--;
+    return min_node;
+}
+
+// close list 체크 배열
+int closed[Z][Y][X] = {0};
+
+// reconstruct 경로 출력
+void reconstruct(Node* end_node) {
+    Node* path[100];
+    int count = 0;
+    Node* current = end_node; // 도착 노드
+    while (current != NULL) { // 불가능한 경우가 아니라면
+
+        if (current != NULL) {
+            printf("Reconstructing: %d, %d, %d\n", current->x, current->y, current->z);
+        } else {
+            printf("Reconstructing: None, None, None\n");
+        }
+
+        path[count++] = current;
+        current = current->parent;
+    }
+    
+    printf("경로: ");
+    // reverse
+    for (int i = count - 1; i >= 0; i--) {
+        printf("(%d,%d,%d)", path[i]->x, path[i]->y, path[i]->z);
+        
+        if (i > 0) {
+            printf(" -> ");
+        }
+        
+        grid[path[i]->z][path[i]->y][path[i]->x] = 2; // 경로 표시
+    }
+    printf("  %d번\n", count);
+}
+
+// A* 알고리즘
+void search(int start[3], int goal[3]) {
+    Node* s_node = (Node*)malloc(sizeof(Node));
+    s_node->x = start[0];
+    s_node->y = start[1];
+    s_node->z = start[2];
+    s_node->g = 0;
+    s_node->h = 0;
+    s_node->f = 0;
+    s_node->parent = NULL;
+
+    Node* g_node = (Node*)malloc(sizeof(Node));
+    g_node->x = goal[0];
+    g_node->y = goal[1];
+    g_node->z = goal[2];
+
+    open_list[open_count++] = s_node;
+
+    while (open_count > 0) {
+        Node* current = pop_min_f();
+        closed[current->z][current->y][current->x] = 1;
+
+        printf("Add Close List: %d, %d, %d (f=%f, g=%f, h=%f)\n", current->x, current->y, current->z, current->f, current->g, current->h);
+
+        if (current->x == g_node->x && current->y == g_node->y && current->z == g_node->z) {
+            printf("Completed Node: %d, %d, %d (f=%f, g=%f, h=%f)\n", current->x, current->y, current->z, current->f, current->g, current->h);
+            reconstruct(current);
+            return;
+        }
+
+        for (int i = 0; i < direction_count; i++) {
+            int nx = current->x + directions[i][0];
+            int ny = current->y + directions[i][1];
+            int nz = current->z + directions[i][2];
+
+            if (nx < 0 || nx >= X || ny < 0 || ny >= Y || nz < 0 || nz >= Z) continue;
+            if (grid[nz][ny][nx] == 1 || closed[nz][ny][nx]) continue;
+
+            Node* neighbor = (Node*)malloc(sizeof(Node));
+            neighbor->x = nx;
+            neighbor->y = ny;
+            neighbor->z = nz;
+            neighbor->g = current->g + distance(current, neighbor);
+            neighbor->h = distance(neighbor, g_node);
+            neighbor->f = neighbor->g + neighbor->h;
+            neighbor->parent = current;
+
+            int skip = 0;
+            for (int j = 0; j < open_count; j++) {
+                if (open_list[j]->x == nx && open_list[j]->y == ny && open_list[j]->z == nz && open_list[j]->g <= neighbor->g) {
+                    skip = 1;
+                    break;
+                }
+            }
+            if (!skip) {
+                open_list[open_count++] = neighbor;
+                printf("Add Open List: %d, %d, %d (f=%f, g=%f, h=%f)\n", neighbor->x, neighbor->y, neighbor->z, neighbor->f, neighbor->g, neighbor->h);
+            }
+        }
+    }
+    printf("불가능한 경우\n");
+}
+
+int main() {
+    int start[3] = {0, 0, 0};
+    int goal[3] = {X - 1, Y - 1, Z - 1};
+
+    init_directions(); // 방향 설정
+    search(start, goal); // 탐색 수행
+
+    return 0;
+}
